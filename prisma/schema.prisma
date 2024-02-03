@@ -1,0 +1,44 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum IntegrationType {
+  GITHUB
+  NOTION
+}
+
+model User {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  name            String
+  photo           String?
+  isEmailVerified Boolean  @default(false) @map("is_email_verified")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  lastLogin       DateTime @map("last_login")
+  hashnodePat     String?  @map("hashnode_pat")
+  publications    Publication[]
+
+  @@map("users")
+}
+
+model Publication {
+  id          String   @id @default(cuid())
+  title       String   @map("title")
+  url         String   @unique @map("url")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  userId      String   @map("user_id")
+  user        User     @relation(fields: [userId], references: [id])
+  from        IntegrationType @map("from")
+
+  @@map("publications")
+}
