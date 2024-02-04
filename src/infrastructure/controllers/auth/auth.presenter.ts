@@ -46,6 +46,21 @@ export class IsAuthPresenter {
   }
 }
 
+export class IsUserPresenter {
+  @ApiResponseProperty()
+  name: string;
+
+  @ApiResponseProperty()
+  photo: string;
+
+  @ApiResponseProperty()
+  pat: string;
+
+  constructor(data: Partial<IsUserPresenter>) {
+    Object.assign(this, data);
+  }
+}
+
 export class RefreshedAccessTokenPresenter {
   @ApiResponseProperty()
   access: string;

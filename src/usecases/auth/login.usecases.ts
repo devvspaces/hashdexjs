@@ -65,10 +65,22 @@ export class LoginUseCases {
         pat: exists.hashnodePat
       }
     } catch (error) {
+      console.error(error);
+      this.logger.error(error);
       this.exception.badRequestException({
         message: 'Id token is invalid'
       });
     }
+  }
+
+  async getUser(id: string) {
+    let exists = await this.userRepository.getUser(id);
+    if (!exists) {
+      this.exception.unauthorizedException({
+        'message': 'You are not authorized access this resource'
+      })
+    }
+    return exists
   }
 
   async setHashnodePat(id: string, pat: string) {
@@ -86,7 +98,7 @@ export class LoginUseCases {
       id,
       type: TokenType.ACCESS,
     };
-    const access = await this.jwtTokenService.signPayload(accessTokenPayload);
+    const access = await this.jwtTokenService.signPayload(accessTokenPayload, this.jwtConfig.getJwtSecret(), this.jwtConfig.getJwtExpirationTime() );
     return {
       access,
       accessExpiresIn: this.jwtConfig.getJwtExpirationTime(),

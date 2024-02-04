@@ -2,6 +2,8 @@ import {
   Body,
   ClassSerializerInterceptor,
   Controller,
+  Get,
+  HttpCode,
   Inject,
   Post,
   UseGuards,
@@ -18,6 +20,7 @@ import {
 import { AuthLoginDto, RefreshDto, SetHashnodeDto } from './auth-dto.class';
 import {
   IsAuthPresenter,
+  IsUserPresenter,
   RefreshedAccessTokenPresenter,
 } from './auth.presenter';
 
@@ -51,6 +54,7 @@ export class AuthController {
     description: 'The user was logged in successfully',
     type: IsAuthPresenter,
   })
+  @HttpCode(200)
   async login(@Body() auth: AuthLoginDto) {
     const {name, photo, pat, tokens} = await this.loginUsecaseProxy
       .getInstance()
@@ -58,14 +62,15 @@ export class AuthController {
     return new IsAuthPresenter({
       tokens,
       name,
-      photo
+      photo,
+      pat
     });
   }
 
   @Post('set-hashnode-account')
-  @UseGuards(JwtRefreshGuard)
   @ApiBody({ type: SetHashnodeDto })
   @ApiBearerAuth()
+  @HttpCode(200)
   @ApiOkResponse({
     description: 'The user was logged in successfully',
     type: MessagePresenter,
@@ -82,6 +87,28 @@ export class AuthController {
     });
   }
 
+  @Get('profile')
+  @ApiOperation({
+    summary: 'Create / login a new user',
+    description: 'Use this route to log in a user',
+  })
+  @ApiOkResponse({
+    description: 'The user was logged in successfully',
+    type: IsUserPresenter,
+  })
+  @HttpCode(200)
+  async profile(@CurrentUserAccount() payload: IJwtServicePayload) {
+    const user = await this.loginUsecaseProxy
+      .getInstance()
+      .getUser(payload.id);
+    console.log(user)
+    return new IsUserPresenter({
+      name: user.name,
+      photo: user.photo,
+      pat: user.hashnodePat,
+    });
+  }
+
   @Post('refresh')
   @UseGuards(JwtRefreshGuard)
   @ApiBody({ type: RefreshDto })
@@ -90,6 +117,7 @@ export class AuthController {
     summary: 'Refreshes the access token',
     description: 'Use this route to refresh the access token',
   })
+  @HttpCode(200)
   @ApiOkResponse({
     description: 'The access token was refreshed successfully',
     type: RefreshedAccessTokenPresenter,
